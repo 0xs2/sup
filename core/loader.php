@@ -6,6 +6,7 @@ header("X-Frame-Options: DENY");
 
 include_once(dirname(__FILE__) . '/lang.php');
 include_once(dirname(__FILE__) . '/config.php');
+include_once(dirname(__FILE__). '/lib/mysqlidb.php');
 
 if(!$config['production']) {
     ini_set('display_errors', 0);
@@ -13,9 +14,17 @@ if(!$config['production']) {
     error_reporting(E_ERROR | E_WARNING | E_PARSE);
 }
 
+$db = new MysqliDb (Array (
+    'host' => $config['db']['host'],
+    'username' => $config['db']['user'],
+    'password' => $config['db']['pass'],
+    'db'=> $config['db']['name'],
+    'port' => $config['db']['port']
+));
+
+
 include_once(dirname(__FILE__) . '/lib/Router.php');
 include_once(dirname(__FILE__) . '/lib/PhpRepository.php');
-include_once(dirname(__FILE__) . '/db.php');
 include_once(dirname(__FILE__) . '/functions.php');
 
 ?>

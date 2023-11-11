@@ -4,18 +4,25 @@ $config = [
     "production" => false, // only if you're testing
     "defaultLang" => 'en', // supported languages: en, fr, es, de
     "siteURL" => 'http://localhost/up', // main url
-    "uploadsDir" => 'uploads/', // where uploads go
+    "uploadsDir" => 'fileUploads/', // where uploads go
     "maxFileSize" => 104857600, // file size limit
     "limitPerIP" => 60, // cooldown for an IP, in seconds
     "proxyAPI" => "https://api.techniknews.net/ipgeo", // api that checks if the ip is a proxy
     "proxiesAllowed" => false, // are proxies/vpns allowed?
     "allowedFiles" => [ 
-        "txt", "jpg", "jpeg", "png", "gif", "webp",
+        "txt", "jpg", "jpeg","mpv","mp4", "png", "gif", "webp",
     ],
     "api" => [
         "enabled" => true, // is the api enabled?
         "keyRequired" => false, // do you require people to use your key?
         "apiKey" => "" // put a key here
+    ],
+    "db" => [
+	"host" => "localhost",
+	"user" => "root",
+	"pass" => "",
+	"name" => "sup",
+	"port" => 3306
     ],
     "salting" => [
         "salt" => "thisisasecretsalt",

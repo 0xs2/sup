@@ -43,6 +43,7 @@ $router->get('/get', function() use($lang, $config, $db) {
         
     // handle filing
     $db->where("generatedFilename", $_GET['f']);
+    $db->where("(exp >= ? OR exp = ?)", [time(), 0]);
     $file = $db->getOne("data");
 
     if(!$file) {
@@ -53,18 +54,6 @@ $router->get('/get', function() use($lang, $config, $db) {
     if($file['protected']) {
         if(!isset($_GET['key']) || !password_verify($_GET['key'], $file['pwd'])) {
             quit(500, $l['not_allowed']);
-        }
-    }
-
-    // handle expire
-    if($file['exp'] != 0) {
-        if($file['exp'] >= date()) {
-            $out = [
-            '%file%' => $_GET['f'],
-            '%date%' => unix($file['exp'])
-            ];
-
-            quit(500, str_replace(array_keys($out), $out, $l['file_expired']));
         }
     }
 
