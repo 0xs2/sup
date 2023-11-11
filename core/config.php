@@ -1,10 +1,10 @@
 <?php
 
-$config = [
+define('APP_CONFIG',[
     "production" => false, // only if you're testing
     "defaultLang" => 'en', // supported languages: en, fr, es, de
-    "siteURL" => 'http://localhost/up', // main url
-    "uploadsDir" => 'fileUploads/', // where uploads go
+    "siteURL" => 'http://localhost/sip1', // main url
+    "uploadsDir" => 'uploads/', // where uploads go
     "maxFileSize" => 104857600, // file size limit
     "limitPerIP" => 60, // cooldown for an IP, in seconds
     "proxyAPI" => "https://api.techniknews.net/ipgeo", // api that checks if the ip is a proxy
@@ -21,16 +21,15 @@ $config = [
 	"host" => "localhost",
 	"user" => "root",
 	"pass" => "",
-	"name" => "sup",
+	"name" => "up",
 	"port" => 3306
     ],
     "salting" => [
         "salt" => "thisisasecretsalt",
         'method' => "sha512",
         "length" => 10
-    ] // gives link a string ex: https://sup.example.com/get?f=b45dd0514e
-];
-
+    ]
+]);
 
 
 

@@ -8,15 +8,14 @@ header("X-Frame-Options: DENY");
 
 $router = new \Bramus\Router\Router();
 
+$router->get('/', function() {
 
-$router->get('/', function() use($lang, $config) {
-
-    $l = isset($_GET['ln']) && in_array($_GET['ln'], $lang['languages']) ? $lang[$_GET['ln']] : $lang[$config['defaultLang']];
+    $l = isset($_GET['ln']) && in_array($_GET['ln'], APP_LANG['languages']) ? APP_LANG[$_GET['ln']] : APP_LANG[APP_CONFIG['defaultLang']];
     $page = [
         "%description%" => $l['description'],
         '%sitename%' => $l['sitename'],
-        "%lang%" => isset($_GET['ln']) && in_array($_GET['ln'], $lang['languages']) ? $_GET['ln'] : $config['defaultLang'],
-        "%siteurl%" => $config['siteURL'],
+        "%lang%" => isset($_GET['ln']) && in_array($_GET['ln'], APP_LANG['languages']) ? $_GET['ln'] : APP_CONFIG['defaultLang'],
+        "%siteurl%" => APP_CONFIG['siteURL'],
         '%api%' => $l['api'],
         '%about%' => $l['about'],
         '%upload%' => $l['upload'],
@@ -25,7 +24,7 @@ $router->get('/', function() use($lang, $config) {
         '%pickafile%' => $l['pickafile'],
         '%lastmod%' => filemtime('./public/main.js'),
         '%lastmodcss%' => filemtime('./public/style.css'),
-        "%whitelisted%" => allowedFormat($config['allowedFiles']),
+        "%whitelisted%" => allowedFormat(),
         '%selectafile%' => $l['selectafile'],
         '%uploadtxt%' => $l['uploadtxt'],
         
@@ -33,8 +32,8 @@ $router->get('/', function() use($lang, $config) {
     echo str_replace(array_keys($page), $page,file_get_contents('src/home.html'));
 });
 
-$router->get('/get', function() use($lang, $config, $db) {
-    $l = isset($_GET['ln']) && in_array($_GET['ln'], $lang['languages']) ? $lang[$_GET['ln']] : $lang[$config['defaultLang']];
+$router->get('/get', function() use($db) {
+    $l = isset($_GET['ln']) && in_array($_GET['ln'], APP_LANG['languages']) ? APP_LANG[$_GET['ln']] : APP_LANG[APP_CONFIG['defaultLang']];
 
     // handle param
     if(!isset($_GET['f'])) {
@@ -59,51 +58,49 @@ $router->get('/get', function() use($lang, $config, $db) {
 
     header('Content-type: ' . $file['mime']);
     header("Content-Disposition: inline; filename=\"".basename($file['generatedFilename'])."\";");
-    header("Content-Length: ".filesize($config['uploadsDir'].$file['generatedFilename']));
+    header("Content-Length: ".filesize(APP_CONFIG['uploadsDir'].$file['generatedFilename']));
     header("Expires: 0");
     header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
     header("Cache-Control: private");
     header("Pragma: public");
     ob_clean();
-    readfile($config['uploadsDir'].$file['generatedFilename']);
-
+    readfile(APP_CONFIG['uploadsDir'].$file['generatedFilename']);
     
-
 });
 
-$router->post('/upload', function() use($lang, $config, $db) {
+$router->post('/upload', function() use($db) {
     // content type is json for outputs
     header("Content-Type: application/json");
 
     $repository = new PhpRepository;
     $time = time();
     $ip = getIp();
-    $l = isset($_GET['ln']) && in_array($_GET['ln'], $lang['languages']) ? $lang[$_GET['ln']] : $lang[$config['defaultLang']];
+    $l = isset($_GET['ln']) && in_array($_GET['ln'], APP_LANG['languages']) ? APP_LANG[$_GET['ln']] : APP_LANG[APP_CONFIG['defaultLang']];
 
     // if the API is enabled, allow cors from anywhere
-    if($config['api']['enabled']) {
+    if(APP_CONFIG['api']['enabled']) {
         header("Access-Control-Allow-Origin: *");
-        if($config['api']['keyRequired'] && !isset($_POST['key']) || $_POST['key'] != $config['api']['apiKey']) {  
+        if(APP_CONFIG['api']['keyRequired'] && !isset($_POST['key']) || $_POST['key'] != APP_CONFIG['api']['apiKey']) {  
             quit(500, $l['invalid_api_key']);
         }
     }
     else { 
-        header("Access-Control-Allow-Origin: ". $config['siteURL']);
+        header("Access-Control-Allow-Origin: ". APP_CONFIG['siteURL']);
     }
 
     // proxy restrictions
-    if(!$config['proxiesAllowed'] && $ip != '127.0.0.1') {
-        if(checkProxy($config['proxyAPI'], $ip)) {
+    if(APP_CONFIG['production']) {
+        if(checkProxy($ip)) {
             quit(500, $l['ip_proxy']);
         }
     }
 
     // ratelimit restriction
-    $db->where("uploadIp", $ip);
+    $db->where("uploadIp", generateSalt($ip));
     $db->orderBy("date", "DESC");
     $latest = $db->getOne("data", ["date"]);
 
-    if($latest['date']+$config['limitPerIP'] > $time) {
+    if($latest['date']+APP_CONFIG['limitPerIP'] > $time) {
         quit(429, $l['rate_limited']);
     }
 
@@ -113,11 +110,11 @@ $router->post('/upload', function() use($lang, $config, $db) {
 
         $filename = htmlspecialchars(strip_tags($_FILES['file']['name']));
 
-        if($_FILES['file']['size'] > $config['maxFileSize']) {
-            quit(500, str_replace("%max_size%", $config['maxFileSize'], $l['max_size_reached']));
+        if($_FILES['file']['size'] > APP_CONFIG['maxFileSize']) {
+            quit(500, str_replace("%max_size%", APP_CONFIG['maxFileSize'], $l['max_size_reached']));
         }
 
-        if(!in_array($ext, $config['allowedFiles'])) {
+        if(!in_array($ext, APP_CONFIG['allowedFiles'])) {
             quit(500, str_replace("%file%", $filename, $l['file_invalid_extension']));
         }
 
@@ -129,13 +126,13 @@ $router->post('/upload', function() use($lang, $config, $db) {
         $pro = getRandomString(10);
 
         if ($repository->findType($ext) && $mime == $repository->findType($ext)) {
-            $newFilename = generateSaltedURL($config['salting']['salt'], $config['salting']['method'], $config['salting']['length'], $filename.$time).'.'.$ext;
+            $newFilename = generateSalt($filename.$time).'.'.$ext;
 
             $c = $db->insert('data', [
                 "ogFilename" => $filename,
                 "generatedFilename" => $newFilename,
                 "user_agent" => $_SERVER['HTTP_USER_AGENT'],
-                "uploadIp" => $ip,
+                "uploadIp" => generateSalt($ip),
                 "ext" => $ext,
                 "protected" => isset($_POST['protect']) ? true : false,
                 "exp" => empty($_POST['exp']) ? time() : strtotime($_POST['exp']),
@@ -145,8 +142,8 @@ $router->post('/upload', function() use($lang, $config, $db) {
             ]);
 
             $e = isset($_POST['protect']) ? '&key='.$pro :'';
-            if ($c && move_uploaded_file($_FILES['file']['tmp_name'], $config['uploadsDir'] . $newFilename)) {
-                quit(200, str_replace("%url%", $config['siteURL'] .'/get?f='.$newFilename.$e, $l['success_uploaded']));
+            if ($c && move_uploaded_file($_FILES['file']['tmp_name'], APP_CONFIG['uploadsDir'] . $newFilename)) {
+                quit(200, str_replace("%url%", APP_CONFIG['siteURL'] .'/get?f='.$newFilename.$e, $l['success_uploaded']));
             }
             else {
                 quit(500, str_replace("%file%", $filename, $l['failed_uploaded']));

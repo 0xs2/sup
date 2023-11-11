@@ -1,9 +1,8 @@
 <?php
 
-function generateSaltedURL($salt, $method, $length, $raw) {
-    return substr(hash($method, $raw).$salt, 0, $length);
+function generateSalt($str) {
+    return substr(hash(APP_CONFIG['salting']['method'], $str).APP_CONFIG['salting']['salt'], 0, APP_CONFIG['salting']['length']);
 }
-
 
 function quit($code, $msg) {
     http_response_code($code);
@@ -30,9 +29,9 @@ function getIP() {
     return $ip;
 }
 
-function checkProxy($url, $ip) {
+function checkProxy($ip) {
     
-    $ch = curl_init($url.'/'.$ip);
+    $ch = curl_init(APP_CONFIG['proxyAPI'].'/'.$ip);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_ENCODING, '');
     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept-Encoding: gzip'));
@@ -71,10 +70,10 @@ function checkProxy($url, $ip) {
     
     
 
-    function allowedFormat($list) {
+    function allowedFormat() {
         $dotPrefixedExtensions = array_map(function($ext) {
             return ".$ext";
-        }, $list);
+        }, APP_CONFIG['allowedFiles']);
         return implode(', ', $dotPrefixedExtensions);
     }
 

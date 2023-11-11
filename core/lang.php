@@ -1,6 +1,6 @@
 <?php
 
-$lang = [
+define('APP_LANG', [
     "languages" => ['en','es','de','zh','fr'],
     "en" => [
         "sitename" => "simple file uploader",
@@ -29,6 +29,6 @@ $lang = [
         "file_invalid_type" => "Your file '%file%' is an invalid type.",
         "no_file_provided" => "No file was provided."
     ]
-];
+]);
 
 ?>
