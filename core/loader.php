@@ -24,7 +24,7 @@ $db = new MysqliDb (Array (
 ));
 
 include_once(dirname(__FILE__) . '/lib/Router.php');
-include_once(dirname(__FILE__) . '/lib/PhpRepository.php');
+include_once(dirname(__FILE__) . '/lib/mime.php');
 include_once(dirname(__FILE__) . '/functions.php');
 
 ?>

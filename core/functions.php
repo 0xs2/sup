@@ -1,7 +1,7 @@
 <?php
 
-function generateSalt($str) {
-    return substr(hash(APP_CONFIG['salting']['method'], $str).APP_CONFIG['salting']['salt'], 0, APP_CONFIG['salting']['length']);
+function generateHash($str) {
+    return substr(hash(APP_CONFIG['hashing']['method'], $str), 0, APP_CONFIG['hashing']['length']);
 }
 
 function quit($code, $msg) {
@@ -28,33 +28,6 @@ function getIP() {
     }
     return $ip;
 }
-
-function checkProxy($ip) {
-    
-    $ch = curl_init(APP_CONFIG['proxyAPI'].'/'.$ip);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_ENCODING, '');
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept-Encoding: gzip'));
-    curl_setopt($ch, CURLOPT_USERAGENT, 'Your User-Agent');
-    
-    $response = curl_exec($ch);
-        if ($response === false) {
-       return true;
-    }
-    curl_close($ch);
-    $jsonData = gzdecode($response);
-    
-    if ($jsonData === false) {
-        return true;
-    }
-    $jsonArray = json_decode($jsonData, true);
-    
-    if ($jsonArray === null || $jsonArray['status'] != 'success' || $jsonArray['proxy']) {
-        return true;
-    }
-
-    return false;
-    }
 
     function getRandomString($n) {
         $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';

@@ -7,8 +7,6 @@ define('APP_CONFIG',[
     "uploadsDir" => 'uploads/', // where uploads go
     "maxFileSize" => 104857600, // file size limit
     "limitPerIP" => 60, // cooldown for an IP, in seconds
-    "proxyAPI" => "https://api.techniknews.net/ipgeo", // api that checks if the ip is a proxy
-    "proxiesAllowed" => false, // are proxies/vpns allowed?
     "allowedFiles" => [ 
         "txt", "jpg", "jpeg","mpv","mp4", "png", "gif", "webp",
     ],
@@ -24,8 +22,7 @@ define('APP_CONFIG',[
 	"name" => "up",
 	"port" => 3306
     ],
-    "salting" => [
-        "salt" => "thisisasecretsalt",
+    "hashing" => [
         'method' => "sha512",
         "length" => 10
     ]

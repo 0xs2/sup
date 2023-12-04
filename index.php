@@ -42,7 +42,7 @@ $router->get('/get', function() use($db) {
         
     // handle filing
     $db->where("generatedFilename", $_GET['f']);
-    $db->where("(exp >= ? OR exp = ?)", [time(), 0]);
+    $db->where("(exp <= ? OR exp = ?)", [time(), 0]);
     $file = $db->getOne("data");
 
     if(!$file) {
@@ -88,15 +88,9 @@ $router->post('/upload', function() use($db) {
         header("Access-Control-Allow-Origin: ". APP_CONFIG['siteURL']);
     }
 
-    // proxy restrictions
-    if(APP_CONFIG['production']) {
-        if(checkProxy($ip)) {
-            quit(500, $l['ip_proxy']);
-        }
-    }
 
     // ratelimit restriction
-    $db->where("uploadIp", generateSalt($ip));
+    $db->where("uploadIp", generateHash($ip));
     $db->orderBy("date", "DESC");
     $latest = $db->getOne("data", ["date"]);
 
@@ -126,13 +120,13 @@ $router->post('/upload', function() use($db) {
         $pro = getRandomString(10);
 
         if ($repository->findType($ext) && $mime == $repository->findType($ext)) {
-            $newFilename = generateSalt($filename.$time).'.'.$ext;
+            $newFilename = generateHash($filename.$time).'.'.$ext;
 
             $c = $db->insert('data', [
                 "ogFilename" => $filename,
                 "generatedFilename" => $newFilename,
                 "user_agent" => $_SERVER['HTTP_USER_AGENT'],
-                "uploadIp" => generateSalt($ip),
+                "uploadIp" => generateHash($ip),
                 "ext" => $ext,
                 "protected" => isset($_POST['protect']) ? true : false,
                 "exp" => empty($_POST['exp']) ? time() : strtotime($_POST['exp']),
